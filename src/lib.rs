@@ -8,6 +8,7 @@
 
 use std::{io::{self, BufRead}, error::Error};
 use clap::Parser;
+use colors::Color;
 
 pub mod config;
 pub mod colors;
@@ -30,7 +31,7 @@ pub struct Cli {
 /// use cli_utils::read_stdin;
 /// let input = read_stdin().unwrap();
 /// ```
-pub fn read_stdin() -> Result<String, std::io::Error> {
+fn read_stdin() -> Result<String, std::io::Error> {
     let stdin = std::io::stdin();
     let mut reader = io::BufReader::new(stdin.lock());
     _read_stdin(&mut reader)
@@ -40,27 +41,20 @@ fn _read_stdin<R: BufRead>(reader: &mut R) -> Result<String, std::io::Error> {
     let mut line = String::new();
     reader
         .read_line(&mut line)?;
-        //.expect("Failed to read input line");
     
     Ok(line.trim().to_string())
 }
 
-pub fn split(s: String, cli: &Cli) -> Result<String, &str> {
-    let s_parts: Vec<&str> = s.split(&cli.delimiter).collect();
-    match s_parts.get(cli.field) {
+fn split(s: String, delimiter: &String, field: usize) -> Result<String, &str> {
+    let s_parts: Vec<&str> = s.split(delimiter).collect();
+    match s_parts.get(field) {
         Some(&s) => Ok(s.to_string()),
         None => Err("No field found at index")
     }
 }
 
-pub fn display(s: String, cli: &Cli) {
-    let color = match cli.color.as_str() {
-        "r" => colors::Color::Red,
-        "b" => colors::Color::Blue,
-        "y" => colors::Color::Yellow,
-        "g" => colors::Color::Green,
-        &_ => panic!("Invalid color option")
-    };
+fn display(s: String, color: &String) -> Result<(), &str> {
+    let color = match_color(color)?;
 
     let mut color_struct = colors::ColorString {
         color: color,
@@ -70,15 +64,27 @@ pub fn display(s: String, cli: &Cli) {
 
     color_struct.paint();
 
-    println!("{}", color_struct.colorised)
+    println!("{}", color_struct.colorised);
+
+    Ok(())
+}
+
+fn match_color(color: &String) -> Result<Color, &str> {
+    match color.as_str() {
+        "r" => Ok(colors::Color::Red),
+        "b" => Ok(colors::Color::Blue),
+        "y" => Ok(colors::Color::Yellow),
+        "g" => Ok(colors::Color::Green),
+        _ => Err("Unmatched color input"),
+    }
 }
 
 pub fn run(cli: &Cli) -> Result<(), Box<dyn Error>> {
     let input_s = read_stdin()?;
 
-    let output_s = split(input_s, cli)?;
+    let output_s = split(input_s, &cli.delimiter, cli.field)?;
 
-    display(output_s, cli);
+    display(output_s, &cli.color);
 
     Ok(())
 }
