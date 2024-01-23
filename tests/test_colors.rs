@@ -4,8 +4,8 @@ use cli_utils::colors::{ColorString, Color};
 fn test_red_color() {
     let mut color_string = ColorString {
         color: Color::Red,
-        string: "Red".to_string(),
-        colorised: "".to_string(),
+        string: "Red",
+        colorised: String::new(),
     };
     color_string.paint();
     

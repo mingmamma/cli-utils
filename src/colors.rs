@@ -9,11 +9,11 @@
 /// # Examples:
 /// ```
 /// use cli_utils::colors::*;
-/// let color_string = ColorString{color: Color::Red, string: "Red".to_string(), colorised: "".to_string()};
+/// let color_string = ColorString{color: Color::Red, string: "Red", colorised: String::new()};
 /// ```
-pub struct ColorString {
+pub struct ColorString<'a> {
     pub color: Color,
-    pub string: String,
+    pub string: &'a str,
     pub colorised: String,
 }
 
@@ -50,7 +50,7 @@ pub fn reset(s: &str) -> String {
     format!("\x1b[0m{}\x1b[0m", s)
 }
 
-impl ColorString {
+impl ColorString< '_> {
     pub fn paint(&mut self) {
         match self.color { 
             Color::Blue => self.colorised = blue(&self.string),

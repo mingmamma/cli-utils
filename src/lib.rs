@@ -45,19 +45,21 @@ fn _read_stdin<R: BufRead>(reader: &mut R) -> Result<String, std::io::Error> {
     Ok(line.trim().to_string())
 }
 
-fn split(s: String, delimiter: &String, field: usize) -> Result<String, &str> {
+// Note that the split function does NOT need to own the input string to be splitted
+// and hence the input parameter and output are taken as &str
+fn split<'a>(s: &'a str, delimiter: &String, field: usize) -> Result<&'a str, &'static str> {
     let s_parts: Vec<&str> = s.split(delimiter).collect();
     match s_parts.get(field) {
-        Some(&s) => Ok(s.to_string()),
+        Some(&s_part) => Ok(s_part),
         None => Err("No field found at index")
     }
 }
 
-fn display(s: String, color: &String) -> Result<(), &str> {
+fn display(s: &str, color: &String) -> Result<(), &'static str> {
     let color = match_color(color)?;
 
     let mut color_struct = colors::ColorString {
-        color: color,
+        color,
         string: s,
         colorised: String::new(),
     };
@@ -69,7 +71,7 @@ fn display(s: String, color: &String) -> Result<(), &str> {
     Ok(())
 }
 
-fn match_color(color: &String) -> Result<Color, &str> {
+fn match_color(color: &String) -> Result<Color, &'static str> {
     match color.as_str() {
         "r" => Ok(colors::Color::Red),
         "b" => Ok(colors::Color::Blue),
@@ -82,9 +84,9 @@ fn match_color(color: &String) -> Result<Color, &str> {
 pub fn run(cli: &Cli) -> Result<(), Box<dyn Error>> {
     let input_s = read_stdin()?;
 
-    let output_s = split(input_s, &cli.delimiter, cli.field)?;
+    let output_s = split(&input_s, &cli.delimiter, cli.field)?;
 
-    display(output_s, &cli.color);
+    display(output_s, &cli.color)?;
 
     Ok(())
 }
